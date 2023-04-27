@@ -1,26 +1,36 @@
 package com.springboot.jewellerysystem.controller.users;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import com.springboot.jewellerysystem.entity.Blog;
+import com.springboot.jewellerysystem.entity.BlogCategory;
 import com.springboot.jewellerysystem.entity.Category;
 import com.springboot.jewellerysystem.entity.CompanyDetail;
 import com.springboot.jewellerysystem.entity.ContactUs;
+import com.springboot.jewellerysystem.entity.Faq;
 import com.springboot.jewellerysystem.entity.Link;
 import com.springboot.jewellerysystem.entity.MainCategory;
 import com.springboot.jewellerysystem.entity.OurService;
 import com.springboot.jewellerysystem.entity.Product;
+import com.springboot.jewellerysystem.entity.Wishlist;
+import com.springboot.jewellerysystem.service.BlogCategoryService;
+import com.springboot.jewellerysystem.service.BlogService;
 import com.springboot.jewellerysystem.service.CategoryService;
 import com.springboot.jewellerysystem.service.CompanyDetailService;
 import com.springboot.jewellerysystem.service.ContactUsService;
+import com.springboot.jewellerysystem.service.FaqService;
 import com.springboot.jewellerysystem.service.LinkService;
 import com.springboot.jewellerysystem.service.OurServiceService;
 import com.springboot.jewellerysystem.service.ProductService;
+import com.springboot.jewellerysystem.service.WishlistService;
+import com.springboot.jewellerysystem.util.Helper;
 
 @Controller
 public class HomeController {
@@ -37,15 +47,20 @@ public class HomeController {
 	
 	private LinkService linkService;
 	
+	private FaqService faqService;
+	
+	private BlogService blogService;
+	
+	private BlogCategoryService blogCategoryService;
+	
+	private WishlistService wishlistService;
 	
 	
-	
-	
-	
-	
+
 	public HomeController(CategoryService categoryService, ProductService productService,
 			OurServiceService ourServiceService, CompanyDetailService companyDetailService,
-			ContactUsService contactUsService, LinkService linkService) {
+			ContactUsService contactUsService, LinkService linkService, FaqService faqService, BlogService blogService,
+			BlogCategoryService blogCategoryService, WishlistService wishlistService) {
 		super();
 		this.categoryService = categoryService;
 		this.productService = productService;
@@ -53,46 +68,32 @@ public class HomeController {
 		this.companyDetailService = companyDetailService;
 		this.contactUsService = contactUsService;
 		this.linkService = linkService;
+		this.faqService = faqService;
+		this.blogService = blogService;
+		this.blogCategoryService = blogCategoryService;
+		this.wishlistService = wishlistService;
 	}
 
 
-
-
-
-	@GetMapping("/")
+	@GetMapping({"/","/home"})
 	public String showHome(Model m) {
 		
-		List<Category> listCategory = categoryService.getAllCategoryByMainCategory(new MainCategory(1));
+		Helper helper = new Helper();
+		
+		
+//		List<Category> tabCategory1=helper.getCategoryList(new int[]{1,2,3,4},categoryService);
+//		List<Category> tabCategory2=helper.getCategoryList(new int[]{5,11,12,14},categoryService);
+//		List<Category> tabCategory3=helper.getCategoryList(new int[]{7,10,6,8},categoryService);
+//		
+		
+	
+//	   m.addAttribute("tabCategory1",tabCategory1);
+//	   m.addAttribute("tabCategory2",tabCategory2);
+//	   m.addAttribute("tabCategory3",tabCategory3);
+//		
+//	
+	   List<Category> listCategory = categoryService.getAllCategoryByMainCategory(new MainCategory(1));
 		m.addAttribute("listCategory",listCategory);
-		List<Category> tabCategory=new ArrayList<>(); // = categoryService.getAllCategoryByMainCategory(new MainCategory(1)).subList(5, );
-		m.addAttribute("tabCategory",tabCategory);
-		int j=0;
-	for(int i=0;i<listCategory.size();i++) {
-		if(listCategory.get(i).getProducts().size() > 10)
-		{ tabCategory.add(listCategory.get(i)); j++;}
-	}
-		
-		
-		List<Product> listProduct1 = productService.getAllProductByCategory(tabCategory.get(0));
-		int L1 = (listProduct1.size()>10) ? 10 : listProduct1.size();
-		listProduct1 = listProduct1.subList(1, L1);
-		m.addAttribute("listProduct1",listProduct1);
-		
-		List<Product> listProduct2 = productService.getAllProductByCategory(tabCategory.get(1));
-		int L2 = (listProduct2.size()>10) ? 10 : listProduct2.size();
-		listProduct2 = listProduct2.subList(1, L2);
-		
-		m.addAttribute("listProduct2",listProduct2);
-		
-		List<Product> listProduct3 = productService.getAllProductByCategory(tabCategory.get(2));
-		int L3 = (listProduct3.size()>10) ? 10 : listProduct3.size();
-		listProduct3 = listProduct3.subList(1, L3);
-		m.addAttribute("listProduct3",listProduct3);
-		
-		List<Product> listProduct4 = productService.getAllProductByCategory(tabCategory.get(3));
-		int L4 = (listProduct4.size()>10) ? 10 : listProduct4.size();
-		listProduct4 = listProduct4.subList(1, L4);
-		m.addAttribute("listProduct4",listProduct4);
 		
 		List<OurService> listOurService = ourServiceService.getAllOurService();
 		m.addAttribute("listOurService",listOurService);
@@ -111,12 +112,20 @@ public class HomeController {
 	}
 	
 	@GetMapping("/about")
-	public String showAbout() {
+	public String showAbout(Model m) {
+		
+		
+		CompanyDetail companyDetail = companyDetailService.getAllCompanyDetail().get(0);
+		m.addAttribute("companyDetail", companyDetail);
+	
 		return "user/about-us";
 	}
 	
 	@GetMapping("/contact")
 	public String showContact(Model m,ContactUs contactUs) {
+		
+		List<Category> listCategory = categoryService.getAllCategoryByMainCategory(new MainCategory(1));
+		m.addAttribute("listCategory",listCategory);
 		
 		CompanyDetail companyDetail = companyDetailService.getAllCompanyDetail().get(0);
 		m.addAttribute("companyDetail", companyDetail);
@@ -131,12 +140,67 @@ public class HomeController {
 		contactUsService.createOrUpdateContactUs(contactUs);
 		
 		
-		return "redirect:/user/index";
+		return "redirect:/home";
 	}
 	
+	@GetMapping("/faq")
+	public String showFaq(Model m) {
+		
+		List<Faq> listFaq = faqService.getAllFaq();
+		m.addAttribute("listFaq", listFaq);
+		CompanyDetail companyDetail = companyDetailService.getAllCompanyDetail().get(0);
+		m.addAttribute("companyDetail", companyDetail);
+		
+		return "user/faq";
+	}
+	
+	@GetMapping("/blog")
+	public String showBlog(Model m) {
+		
+		List<Blog> listBlog = blogService.getAllBlog();
+		m.addAttribute("listBlog", listBlog);
+		
+		List<BlogCategory> listBlogCategory = blogCategoryService.getAllBlogCategory();
+		m.addAttribute("listBlogCategory", listBlogCategory);
+		
+		List<Category> listCategory = categoryService.getAllCategoryByMainCategory(new MainCategory(1));
+		m.addAttribute("listCategory",listCategory);
+		
+		CompanyDetail companyDetail = companyDetailService.getAllCompanyDetail().get(0);
+		m.addAttribute("companyDetail", companyDetail);
+		
+		return "user/blog";
+	}
+	@GetMapping("/blogDetail")
+	public String showBlog(@RequestParam int id, Model m) {
+		
+		Blog blog = blogService.loadBlogById(id);
+		m.addAttribute("blog", blog);
+		
+		List<BlogCategory> listBlogCategory = blogCategoryService.getAllBlogCategory();
+		m.addAttribute("listBlogCategory", listBlogCategory);
+		
+		List<Category> listCategory = categoryService.getAllCategoryByMainCategory(new MainCategory(1));
+		m.addAttribute("listCategory",listCategory);
+		
+		CompanyDetail companyDetail = companyDetailService.getAllCompanyDetail().get(0);
+		m.addAttribute("companyDetail", companyDetail);
+		
+		return "user/blog-detail";
+	}
+	
+
 	@GetMapping("/cart")
-	public String showCart() {
+	public String showCart(Model m) {
+		List<Category> listCategory = categoryService.getAllCategoryByMainCategory(new MainCategory(1));
+		m.addAttribute("listCategory",listCategory);
+		
+		CompanyDetail companyDetail = companyDetailService.getAllCompanyDetail().get(0);
+		m.addAttribute("companyDetail", companyDetail);
+		
+		
 		return "user/cart";
+		
 	}
 	
 	@GetMapping("/compare")
@@ -144,18 +208,41 @@ public class HomeController {
 		return "user/compare";
 	}
 	
-	@GetMapping("/shop")
-	public String showShopPage() {
+	@GetMapping(value="/shop")
+	public String showShopPage(@RequestParam int cat_id, Model m) {
+		
+		
+		List<Product> productList = productService.getAllProductByCategory(new Category(cat_id));
+		m.addAttribute("productList", productList);
+		
+		List<Category> listCategory = categoryService.getAllCategoryByMainCategory(new MainCategory(1));
+		m.addAttribute("listCategory",listCategory);
+		CompanyDetail companyDetail = companyDetailService.getAllCompanyDetail().get(0);
+		m.addAttribute("companyDetail", companyDetail);
+		
 		return "user/shop";
 	}
 	
 	@GetMapping("/productDetail")
-	public String showProductDetail() {
+	public String showProductDetail(@RequestParam("id")int id, Model m ) {
+		
+		Product product = productService.loadProductById(id);
+		List<Category> listCategory = categoryService.getAllCategoryByMainCategory(new MainCategory(1));
+		m.addAttribute("listCategory",listCategory);
+		CompanyDetail companyDetail = companyDetailService.getAllCompanyDetail().get(0);
+		m.addAttribute("companyDetail", companyDetail);
 		return "user/single-product";
 	}
 	
 	@GetMapping("/wishlist")
-	public String showWishlist() {
+	public String showWishlist(Model m) {
+		
+		List<Wishlist> listWishlist = wishlistService.getAllWishlist(); 
+		List<Category> listCategory = categoryService.getAllCategoryByMainCategory(new MainCategory(1));
+		m.addAttribute("listCategory",listCategory);
+		CompanyDetail companyDetail = companyDetailService.getAllCompanyDetail().get(0);
+		m.addAttribute("companyDetail", companyDetail);
+		
 		return "user/wishlist";
 	}
 	
