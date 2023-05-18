@@ -41,6 +41,8 @@
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
+
+
                   <table id="example1" class="table table-bordered table-striped">
                     <thead>
                       <tr>
@@ -61,7 +63,8 @@
 
                         <td> <a th:href="@{/admin/brand/update/{id}(id=${brand.id})}"
                             class="btn btn-success btn-sm">UPDATE</a>
-                          <a th:href="@{/admin/brand/delete/{id}(id=${brand.id})}" class="btn btn-danger btn-sm">DELETE</a>
+                          <a th:href="@{/admin/brand/delete/{id}(id=${brand.id})}" class="btn btn-danger btn-sm"
+                            onClick="return confirm('Do you want to delete?')">DELETE</a>
                         </td>
                       </tr>
                     </tbody>
@@ -90,5 +93,59 @@
       <!-- /.content -->
     </div>
   </div>
+  <!-- xxxxxxxxxx -->
+  <section layout:fragment="script1">
+
+    <script>
+
+      $(function () {
+        var Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000
+        });
+
+        function ok1() {
+          Toast.fire({
+            icon: 'success',
+            title: 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr.'
+          })
+        }
+
+        $('.swalDefaultSuccess').click(function () {
+          Toast.fire({
+            icon: 'success',
+            title: 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr.'
+          })
+        });
+        $('.swalDefaultInfo').click(function () {
+          Toast.fire({
+            icon: 'info',
+            title: 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr.'
+          })
+        });
+        $('.swalDefaultError').click(function () {
+          Toast.fire({
+            icon: 'error',
+            title: 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr.'
+          })
+        });
+        $('.swalDefaultWarning').click(function () {
+          Toast.fire({
+            icon: 'warning',
+            title: 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr.'
+          })
+        });
+        $('.swalDefaultQuestion').click(function () {
+          Toast.fire({
+            icon: 'question',
+            title: 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr.'
+          })
+        });
+      });
+    </script>
+  </section>
+  <!-- xxxxxxxxxx -->
 </body>
 <html>

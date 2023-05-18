@@ -1,16 +1,20 @@
 package com.springboot.jewellerysystem.service;
 
-import com.springboot.jewellerysystem.entity.Cart;
 import java.util.List;
 
-public interface CartService { 
+import com.springboot.jewellerysystem.entity.Cart;
+import com.springboot.jewellerysystem.entity.User;
 
-  List<Cart> getAllCart();
+public interface CartService {
 
-Cart loadCartById(Integer id );
+	List<Cart> getAllCart();
+	List<Cart> getAllCartByUser(User user);
 
-Cart createOrUpdateCart(Cart cart);
+	Cart loadCartById(Integer id);
 
-void removeCart(Integer id);
+	Cart createOrUpdateCart(Cart cart);
 
-} 
+	void removeCart(Integer id);
+	void removeCartByUser(User user);
+
+}

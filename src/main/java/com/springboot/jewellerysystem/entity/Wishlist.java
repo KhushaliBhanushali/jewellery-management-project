@@ -13,6 +13,10 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Entity
 @Table(name = "wishlist")
@@ -32,6 +36,8 @@ public class Wishlist {
 	private User user;
 
 	@Basic
+	@Temporal(TemporalType.DATE)
+	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	@Column(name = "entry_date", nullable = false)
 	private Date entryDate;
 
@@ -86,6 +92,20 @@ public class Wishlist {
 		super();
 	}
 
+	public Wishlist(Integer id, Product product, User user, Date entryDate) {
+		super();
+		this.id = id;
+		this.product = product;
+		this.user = user;
+		this.entryDate = entryDate;
+	}
+	public Wishlist(Product product, User user, Date entryDate) {
+		super();
+		
+		this.product = product;
+		this.user = user;
+		this.entryDate = entryDate;
+	}
 	public Wishlist(Date entryDate) {
 		super();
 		this.entryDate = entryDate;

@@ -3,6 +3,8 @@ package com.springboot.jewellerysystem.controller;
 import java.io.IOException;
 import java.util.List;
 
+import javax.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -18,6 +20,7 @@ import com.springboot.jewellerysystem.entity.BannerImage;
 import com.springboot.jewellerysystem.service.BannerImageService;
 import com.springboot.jewellerysystem.service.BannerService;
 import com.springboot.jewellerysystem.util.FileUploadUtil;
+import com.springboot.jewellerysystem.util.Helper;
 
 
 
@@ -34,6 +37,9 @@ public class BannerImageController {
 
 	@GetMapping(value = "/index")
 	public String bannerImages(Model model, @RequestParam(name = "keyword", defaultValue = "") String keyword) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+		if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
+				
 		List<BannerImage> bannerImages = bannerImageService.getAllBannerImage();
 		model.addAttribute("listBannerImages", bannerImages);
 		model.addAttribute("keyword", keyword);
@@ -42,6 +48,9 @@ public class BannerImageController {
 
 	@GetMapping(value = "/create")
 	public String formBannerImages(Model model) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+		if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
+				
 		model.addAttribute("bannerImage", new BannerImage());
 		List<Banner> banners = bannerService.getAllBanner();
 		model.addAttribute("listBanners", banners);
@@ -50,13 +59,20 @@ public class BannerImageController {
 	}
 
 	@GetMapping(value = "/delete/{id}")
-	public String deleteBannerImage(@PathVariable(value = "id") Integer id, String keyword) {
+	public String deleteBannerImage(@PathVariable(value = "id") Integer id, String keyword,HttpSession session) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+		if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
+				
 		bannerImageService.removeBannerImage(id);
+		session.setAttribute("msg", "deleted");
 		return "redirect:/admin/bannerImage/index?keyword=" + keyword;
 	}
 
 	@GetMapping(value = "/update/{id}")
 	public String updateBannerImage(@PathVariable(value = "id") Integer id, Model model) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+		if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
+				
 		BannerImage bannerImage = bannerImageService.loadBannerImageById(id);
 		
 		model.addAttribute("bannerImage", bannerImage);
@@ -67,8 +83,11 @@ public class BannerImageController {
 	}
 
 	@PostMapping(value = "/save")
-	public String save(BannerImage bannerImage, @RequestParam("file")MultipartFile file) throws IOException {
-		
+	public String save(BannerImage bannerImage, @RequestParam("file")MultipartFile file, HttpSession session) throws IOException {
+		String msg = "inserted";
+		if(bannerImage.getId() != null && bannerImage.getId() != 0) {
+			msg = "updated";
+		}
 		String fileName = StringUtils.cleanPath(file.getOriginalFilename());
 		
 		if(fileName.length() > 3) {
@@ -77,7 +96,12 @@ public class BannerImageController {
 			FileUploadUtil.saveFile(uploadDir, fileName, file);
 		}
 		
-		bannerImageService.createOrUpdateBannerImage(bannerImage);
+		BannerImage b =bannerImageService.createOrUpdateBannerImage(bannerImage);
+		if(b != null) {
+			session.setAttribute("msg", "inserted");
+		}else {
+			session.setAttribute("error","error");
+		}
 		return "redirect:/admin/bannerImage/index";
 	}
 

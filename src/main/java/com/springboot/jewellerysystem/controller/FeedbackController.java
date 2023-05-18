@@ -1,15 +1,21 @@
 package com.springboot.jewellerysystem.controller;
 
 import com.springboot.jewellerysystem.entity.Feedback; 
-import com.springboot.jewellerysystem.service.FeedbackService; 
+import com.springboot.jewellerysystem.service.FeedbackService;
+import com.springboot.jewellerysystem.util.Helper;
+
 import org.springframework.stereotype.Controller; 
 import org.springframework.ui.Model; 
 import org.springframework.web.bind.annotation.GetMapping; 
 import org.springframework.web.bind.annotation.PostMapping; 
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping; 
-import org.springframework.web.bind.annotation.RequestParam; 
-import java.util.List; 
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpSession; 
 @Controller 
 @RequestMapping(value = "admin/feedback") 
 public class FeedbackController { 
@@ -20,7 +26,9 @@ public class FeedbackController {
  
     @GetMapping(value = "/index") 
     public String feedbacks(Model model, @RequestParam(name = "keyword", defaultValue = "") String keyword) { 
-        List<Feedback> feedbacks = feedbackService.getAllFeedback(); 
+    	if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
+    	List<Feedback> feedbacks = feedbackService.getAllFeedback(); 
         model.addAttribute("listFeedbacks", feedbacks); 
         model.addAttribute("keyword", keyword); 
         return "admin/list/feedbacks_list"; 
@@ -28,25 +36,43 @@ public class FeedbackController {
  
   @GetMapping(value = "/create") 
     public String formFeedbacks(Model model) { 
-        model.addAttribute("feedback", new Feedback()); 
+	  if(Helper.checkUserRole()) { return "redirect:/";}
+  	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}  
+	  model.addAttribute("feedback", new Feedback()); 
         return "admin/entry/feedback_entry"; 
     } 
     @GetMapping(value = "/delete/{id}") 
-    public String deleteFeedback(@PathVariable(value = "id") Integer id, String keyword) { 
-        feedbackService.removeFeedback(id); 
+    public String deleteFeedback(@PathVariable(value = "id") Integer id, String keyword, HttpSession session) { 
+    	if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
+    	feedbackService.removeFeedback(id); 
         return "redirect:/admin/feedback/index?keyword=" + keyword; 
     }
  
     @GetMapping(value = "/update/{id}") 
     public String updateFeedback(@PathVariable(value = "id") Integer id, Model model) { 
-        Feedback feedback = feedbackService.loadFeedbackById(id); 
+    	if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
+    	Feedback feedback = feedbackService.loadFeedbackById(id); 
         model.addAttribute("feedback", feedback); 
         return "admin/edit/feedback_edit"; 
     }
  
     @PostMapping(value = "/save") 
-    public String save(Feedback feedback) { 
-        feedbackService.createOrUpdateFeedback(feedback); 
+    public String save(Feedback feedback, HttpSession session) { 
+    	String msg = "inserted";
+		if(feedback.getId() != null && feedback.getId() != 0) {
+			msg = "updated";
+		}
+    	if(feedback.getDate() == null) {
+    		feedback.setDate(new Date());
+    	}
+      Feedback f =  feedbackService.createOrUpdateFeedback(feedback); 
+  	if(f != null) {
+		session.setAttribute("msg", msg);
+	}else {
+		session.setAttribute("error","error");
+	}
         return "redirect:/admin/feedback/index"; 
     }
  

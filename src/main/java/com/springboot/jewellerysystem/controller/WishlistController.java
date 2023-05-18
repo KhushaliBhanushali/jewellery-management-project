@@ -1,6 +1,9 @@
 package com.springboot.jewellerysystem.controller;
 
+import java.util.Date;
 import java.util.List;
+
+import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,6 +19,7 @@ import com.springboot.jewellerysystem.entity.Wishlist;
 import com.springboot.jewellerysystem.service.ProductService;
 import com.springboot.jewellerysystem.service.UserService;
 import com.springboot.jewellerysystem.service.WishlistService;
+import com.springboot.jewellerysystem.util.Helper;
 
 @Controller
 @RequestMapping(value = "admin/wishlist")
@@ -32,6 +36,8 @@ public class WishlistController {
 
 	@GetMapping(value = "/index")
 	public String wishlists(Model model, @RequestParam(name = "keyword", defaultValue = "") String keyword) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
 		List<Wishlist> wishlists = wishlistService.getAllWishlist();
 		model.addAttribute("listWishlists", wishlists);
 		model.addAttribute("keyword", keyword);
@@ -40,6 +46,8 @@ public class WishlistController {
 
 	@GetMapping(value = "/create")
 	public String formWishlists(Model model) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
 		model.addAttribute("wishlist", new Wishlist());
 		List<Product> products = productService.getAllProduct();
 		model.addAttribute("listProducts", products);
@@ -51,13 +59,18 @@ public class WishlistController {
 	}
 
 	@GetMapping(value = "/delete/{id}")
-	public String deleteWishlist(@PathVariable(value = "id") Integer id, String keyword) {
+	public String deleteWishlist(@PathVariable(value = "id") Integer id, String keyword, HttpSession session) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
 		wishlistService.removeWishlist(id);
+		session.setAttribute("msg", "deleted");
 		return "redirect:/admin/wishlist/index?keyword=" + keyword;
 	}
 
 	@GetMapping(value = "/update/{id}")
 	public String updateWishlist(@PathVariable(value = "id") Integer id, Model model) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
 		Wishlist wishlist = wishlistService.loadWishlistById(id);
 		model.addAttribute("wishlist", wishlist);
 		List<Product> products = productService.getAllProduct();
@@ -70,8 +83,12 @@ public class WishlistController {
 	}
 
 	@PostMapping(value = "/save")
-	public String save(Wishlist wishlist) {
-		wishlistService.createOrUpdateWishlist(wishlist);
+	public String save(Wishlist wishlist, HttpSession httpSession) {
+		
+		if(wishlist.getEntryDate() == null) {
+    		wishlist.setEntryDate(new Date());
+    	}
+		Wishlist w=	wishlistService.createOrUpdateWishlist(wishlist);
 		return "redirect:/admin/wishlist/index";
 	}
 

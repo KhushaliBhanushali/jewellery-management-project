@@ -1,16 +1,23 @@
 package com.springboot.jewellerysystem.service;
 
-import com.springboot.jewellerysystem.entity.OrderDetail;
 import java.util.List;
 
-public interface OrderDetailService { 
+import com.springboot.jewellerysystem.entity.Order;
+import com.springboot.jewellerysystem.entity.OrderDetail;
+import com.springboot.jewellerysystem.entity.User;
 
-  List<OrderDetail> getAllOrderDetail();
+public interface OrderDetailService {
 
-OrderDetail loadOrderDetailById(Integer id );
+	List<OrderDetail> getAllOrderDetail();
 
-OrderDetail createOrUpdateOrderDetail(OrderDetail orderDetail);
+	List<OrderDetail> getAllOrderDetailByOrder(Order order);
 
-void removeOrderDetail(Integer id);
+	OrderDetail loadOrderDetailById(Integer id);
 
-} 
+	OrderDetail createOrUpdateOrderDetail(OrderDetail orderDetail);
+
+	void removeOrderDetail(Integer id);
+	
+	void removeOrderDetaiilByUser(User user);
+
+}

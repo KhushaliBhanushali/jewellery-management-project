@@ -3,6 +3,7 @@ package com.springboot.jewellerysystem.controller;
 import com.springboot.jewellerysystem.entity.MainCategory; 
 import com.springboot.jewellerysystem.service.MainCategoryService;
 import com.springboot.jewellerysystem.util.FileUploadUtil;
+import com.springboot.jewellerysystem.util.Helper;
 
 import org.springframework.stereotype.Controller; 
 import org.springframework.ui.Model;
@@ -15,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List; 
+import java.util.List;
+
+import javax.servlet.http.HttpSession; 
 @Controller 
 @RequestMapping(value = "admin/mainCategory") 
 public class MainCategoryController { 
@@ -26,7 +29,9 @@ public class MainCategoryController {
  
     @GetMapping(value = "/index") 
     public String mainCategories(Model model, @RequestParam(name = "keyword", defaultValue = "") String keyword) { 
-        List<MainCategory> mainCategories = mainCategoryService.getAllMainCategory(); 
+    	if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
+    	List<MainCategory> mainCategories = mainCategoryService.getAllMainCategory(); 
         model.addAttribute("listMainCategories", mainCategories); 
         model.addAttribute("keyword", keyword); 
         return "admin/list/mainCategories_list"; 
@@ -34,25 +39,36 @@ public class MainCategoryController {
  
   @GetMapping(value = "/create") 
     public String formMainCategories(Model model) { 
-        model.addAttribute("mainCategory", new MainCategory()); 
+	  if(Helper.checkUserRole()) { return "redirect:/";}
+  	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}  
+	  model.addAttribute("mainCategory", new MainCategory()); 
         return "admin/entry/mainCategory_entry"; 
     } 
     @GetMapping(value = "/delete/{id}") 
-    public String deleteMainCategory(@PathVariable(value = "id") Integer id, String keyword) { 
-        mainCategoryService.removeMainCategory(id); 
+    public String deleteMainCategory(@PathVariable(value = "id") Integer id, String keyword, HttpSession session) { 
+    	if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
+    	mainCategoryService.removeMainCategory(id); 
+        session.setAttribute("msg", "deleted");
         return "redirect:/admin/mainCategory/index?keyword=" + keyword; 
     }
  
     @GetMapping(value = "/update/{id}") 
     public String updateMainCategory(@PathVariable(value = "id") Integer id, Model model) { 
-        MainCategory mainCategory = mainCategoryService.loadMainCategoryById(id); 
+    	if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
+    	MainCategory mainCategory = mainCategoryService.loadMainCategoryById(id); 
         model.addAttribute("mainCategory", mainCategory); 
         return "admin/edit/mainCategory_edit"; 
     }
  
     @PostMapping(value = "/save") 
-    public String save(MainCategory mainCategory, @RequestParam("file")MultipartFile file) throws IOException { 
-      
+    public String save(MainCategory mainCategory, @RequestParam("file")MultipartFile file, HttpSession session) throws IOException { 
+    	String msg = "inserted";
+		if(mainCategory.getId() != null && mainCategory.getId() != 0) {
+			msg = "updated";
+		}
+    	
     	String fileName = StringUtils.cleanPath(file.getOriginalFilename());
     	
     	if(fileName.length() > 3) {
@@ -61,7 +77,12 @@ public class MainCategoryController {
 		FileUploadUtil.saveFile(uploadDir, fileName, file);
     	}
     	
-    	mainCategoryService.createOrUpdateMainCategory(mainCategory); 
+    	MainCategory m = mainCategoryService.createOrUpdateMainCategory(mainCategory); 
+        if(m != null) {
+    		session.setAttribute("msg", "inserted");
+    	}else {
+    		session.setAttribute("error","error");
+    	}
         return "redirect:/admin/mainCategory/index"; 
     }
  

@@ -2,6 +2,8 @@ package com.springboot.jewellerysystem.controller;
 
 import java.util.List;
 
+import javax.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +16,7 @@ import com.springboot.jewellerysystem.entity.Order;
 import com.springboot.jewellerysystem.entity.User;
 import com.springboot.jewellerysystem.service.OrderService;
 import com.springboot.jewellerysystem.service.UserService;
+import com.springboot.jewellerysystem.util.Helper;
 
 @Controller
 @RequestMapping(value = "admin/order")
@@ -28,6 +31,8 @@ public class OrderController {
 
 	@GetMapping(value = "/index")
 	public String orders(Model model, @RequestParam(name = "keyword", defaultValue = "") String keyword) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
 		List<Order> orders = orderService.getAllOrder();
 		model.addAttribute("listOrders", orders);
 		model.addAttribute("keyword", keyword);
@@ -36,6 +41,8 @@ public class OrderController {
 
 	@GetMapping(value = "/create")
 	public String formOrders(Model model) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
 		model.addAttribute("order", new Order());
 		List<User> users = userService.getAllUser();
 		model.addAttribute("listUsers", users);
@@ -44,13 +51,18 @@ public class OrderController {
 	}
 
 	@GetMapping(value = "/delete/{id}")
-	public String deleteOrder(@PathVariable(value = "id") Integer id, String keyword) {
+	public String deleteOrder(@PathVariable(value = "id") Integer id, String keyword, HttpSession session) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
 		orderService.removeOrder(id);
+		session.setAttribute("msg", "deleted");
 		return "redirect:/admin/order/index?keyword=" + keyword;
 	}
 
 	@GetMapping(value = "/update/{id}")
 	public String updateOrder(@PathVariable(value = "id") Integer id, Model model) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
 		Order order = orderService.loadOrderById(id);
 		model.addAttribute("order", order);
 		List<User> users = userService.getAllUser();
@@ -60,9 +72,27 @@ public class OrderController {
 	}
 
 	@PostMapping(value = "/save")
-	public String save(Order order) {
-		orderService.createOrUpdateOrder(order);
+	public String save(Order order, HttpSession session) {
+		String msg = "inserted";
+		if(order.getId() != null && order.getId() != 0) {
+			msg = "updated";
+		}
+		Order o = orderService.createOrUpdateOrder(order);
+		if(o != null) {
+    		session.setAttribute("msg", "inserted");
+    	}else {
+    		session.setAttribute("error","error");
+    	}
 		return "redirect:/admin/order/index";
+	}
+	@GetMapping(value = "/updateStatus/{id}")
+	public String updateOrderStatus(@PathVariable(value = "id") Integer id, Model model) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
+		Order order = orderService.loadOrderById(id);
+		model.addAttribute("order", order);
+		
+		return "admin/order-status";
 	}
 
 }

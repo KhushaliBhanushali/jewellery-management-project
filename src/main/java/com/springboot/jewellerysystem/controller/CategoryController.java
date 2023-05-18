@@ -3,6 +3,8 @@ package com.springboot.jewellerysystem.controller;
 import java.io.IOException;
 import java.util.List;
 
+import javax.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -18,6 +20,7 @@ import com.springboot.jewellerysystem.entity.MainCategory;
 import com.springboot.jewellerysystem.service.CategoryService;
 import com.springboot.jewellerysystem.service.MainCategoryService;
 import com.springboot.jewellerysystem.util.FileUploadUtil;
+import com.springboot.jewellerysystem.util.Helper;
 
 @Controller
 @RequestMapping(value = "admin/category")
@@ -32,6 +35,8 @@ public class CategoryController {
 
 	@GetMapping(value = "/index")
 	public String categories(Model model, @RequestParam(name = "keyword", defaultValue = "") String keyword) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
 		List<Category> categories = categoryService.getAllCategory();
 		model.addAttribute("listCategories", categories);
 		model.addAttribute("keyword", keyword);
@@ -40,6 +45,8 @@ public class CategoryController {
 
 	@GetMapping(value = "/create")
 	public String formCategories(Model model) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
 		model.addAttribute("category", new Category());
 		List<MainCategory> mainCategories = mainCategoryService.getAllMainCategory();
 		model.addAttribute("listMainCategories", mainCategories);
@@ -48,13 +55,18 @@ public class CategoryController {
 	}
 
 	@GetMapping(value = "/delete/{id}")
-	public String deleteCategory(@PathVariable(value = "id") Integer id, String keyword) {
+	public String deleteCategory(@PathVariable(value = "id") Integer id, String keyword, HttpSession session) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
 		categoryService.removeCategory(id);
+		session.setAttribute("msg", "deleted");
 		return "redirect:/admin/category/index?keyword=" + keyword;
 	}
 
 	@GetMapping(value = "/update/{id}")
 	public String updateCategory(@PathVariable(value = "id") Integer id, Model model) {
+		if(Helper.checkUserRole()) { return "redirect:/";}
+    	if(!Helper.checkAdminRole()) {return "redirect:/admin/logout";}
 		Category category = categoryService.loadCategoryById(id);
 		
 		model.addAttribute("category", category);
@@ -65,16 +77,25 @@ public class CategoryController {
 	}
 
 	@PostMapping(value = "/save")
-	public String save(Category category, @RequestParam("file") MultipartFile file) throws IOException {
-
+	public String save(Category category, @RequestParam("file") MultipartFile file, HttpSession session) throws IOException {
+		String msg = "inserted";
+		if(category.getId() != null && category.getId() != 0) {
+			msg = "updated";
+		}
 		String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+		
 		if (fileName.length() > 3) {
 		category.setImage(fileName);
 		String uploadDir = "assets1/images/category";
 		FileUploadUtil.saveFile(uploadDir, fileName, file);
 		}
 		
-		categoryService.createOrUpdateCategory(category);
+		Category c = categoryService.createOrUpdateCategory(category);
+		if(c != null) {
+			session.setAttribute("msg", "inserted");
+		}else {
+			session.setAttribute("error","error");
+		}
 		return "redirect:/admin/category/index";
 	}
 
